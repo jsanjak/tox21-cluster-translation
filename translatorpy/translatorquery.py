@@ -1,4 +1,4 @@
-from .utilities import translate_node_name
+from .trapigraph import TrapiGraph
 
 import json
 import requests
@@ -79,7 +79,7 @@ class TranslatorQuery():
         Public method to submit a query graph. 
         """
         self.query_graph = query_graph
-        self.message_id=self.__submit_to_ars(self.query_graph)
+        self.message_id=self.__submit_to_ars(self.query_graph.query)
         time.sleep(60)
         self.results=self.__retrieve_ars_results(self.message_id)
 

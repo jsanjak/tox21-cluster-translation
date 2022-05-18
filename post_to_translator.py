@@ -1,19 +1,26 @@
-import translatorpy
 import json
+
+from translatorpy.trapigraph import TrapiGraph
+from translatorpy.translatorquery import TranslatorQuery
 
 def main():
 
-    with open("json/indirect-one-hop-connection.json") as json_file:
-        indirect_payload = json.load(json_file)
+    chemical_to_all_genes = [['PUBCHEM.COMPOUND:468595','biolink:Gene','biolink:related_to']]
+    chemical_to_one_gene = [['PUBCHEM.COMPOUND:468595','NCBIGene:2064','biolink:related_to']]
 
-    pubchem_id = 468595
-    ncbi_gene_id = 2064
-    
-    indirect_payload['message']['query_graph']['nodes']['n00']['ids'][0]='PUBCHEM.COMPOUND:{0}'.format(str(pubchem_id))
-    indirect_payload['message']['query_graph']['nodes']['n02']['ids'][0]='NCBIGene:{0}'.format(str(ncbi_gene_id))
+    node_categories = {
+        'PUBCHEM.COMPOUND:468595':['biolink:ChemicalEntity'],
+        'NCBIGene:2064':['biolink:Gene']
+    }
 
-    myquery = translatorpy.TranslatorQuery()
-    myquery.query(indirect_payload)
+    trapi_graph_all_genes = TrapiGraph(chemical_to_all_genes,format='SOP',node_data=node_categories)
+    print(trapi_graph_all_genes.query)
+
+    trapi_graph_one_gene = TrapiGraph(chemical_to_one_gene,format='SOP',node_data=node_categories)
+    print(trapi_graph_one_gene.query)
+
+    myquery = TranslatorQuery()
+    myquery.query(trapi_graph_one_gene)
     print(myquery.arax_url)
 
 if __name__=="__main__":
