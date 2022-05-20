@@ -44,4 +44,13 @@ def translate_node_name(list_input, ontology_prefix, sort_by_ontology=False, log
 
         # return
         return list_result
-        
+  
+def getpath_impl(j, fields, i):
+    if(j is None or i>=len(fields)):
+        return j
+    field = fields[i]
+    jNext = j[field] if field in j else None
+    return getpath_impl(jNext, fields, i+1)
+
+def getpath(j, fields):
+    return getpath_impl(j, fields, 0)

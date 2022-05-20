@@ -1,4 +1,5 @@
 from .trapigraph import TrapiGraph
+from .utilities import *
 
 import json
 import requests
@@ -19,6 +20,7 @@ class TranslatorQuery():
         self.query_graph = None
         self.results = None
         self.arax_base='https://arax.ncats.io'
+        self.ars_url='https://ars.transltr.io/ars/api'
 
     def __submit_to_ars(self,m,ars_url='https://ars.transltr.io/ars/api'):
         """
@@ -36,7 +38,13 @@ class TranslatorQuery():
 
         self.arax_url = f'{self.arax_base}/?source=ARS&id={message_id}'
         return message_id
-    
+
+    def __check_status(self,mid,ars_url='https://ars.transltr.io/ars/api'):
+        message_url = f'{ars_url}/messages/{mid}?trace=y'
+        response = requests.get(message_url)
+        j = response.json()
+        return j['status']
+
     def __retrieve_ars_results(self,mid,ars_url='https://ars.transltr.io/ars/api'):
         """
         A private method to retrieve and munge ARS results based on a trapi message id
@@ -74,12 +82,38 @@ class TranslatorQuery():
             print( child['status'], child['actor']['agent'],nresults )
         return results
 
-    def query(self,query_graph):
+    def query(self,query_graph,delay=30):
         """
         Public method to submit a query graph. 
         """
         self.query_graph = query_graph
         self.message_id=self.__submit_to_ars(self.query_graph.query)
-        time.sleep(60)
+
+        time.sleep(delay)#Time to figure itself out
+        while self.__check_status(self.message_id) == 'Running':
+            print("Still Running")
+            time.sleep(delay) #Time to finish
+        time.sleep(delay*2) #Time to actually get the data in 
         self.results=self.__retrieve_ars_results(self.message_id)
 
+    def __to_tsvlist(self,message,predicate_blacklist=[]):
+        #results = getpath(message,["message","results"])
+        #printjson(results)
+        kg = getpath(message,["message","knowledge_graph"])
+        edges = kg['edges'].items()
+        nodes = kg['nodes']
+        tsv_list=[]
+        for id,edge in edges:
+            triple = (nodes[edge['subject']]['name'],edge['predicate'],nodes[edge['object']]['name'])
+            tsv_list.append('\t'.join(triple))
+        
+        return tsv_list
+
+    def to_tsv(self,fname):
+        with open(fname,'w') as ofile:
+            for result in self.results:
+                message =  self.results[result]['message'].get('results')
+                if message is not None:
+                    tsv_list = self.__to_tsvlist(self.results[result])
+                    for line in tsv_list:
+                        ofile.write(line + '\n')

@@ -35,12 +35,15 @@ class TrapiGraph():
             
             if 'biolink' in node:
                 node_cat = [node]
-                nid = []
 
-            self.query['message']['query_graph']['nodes'][self.node_set[node]] = {
-                'ids':nid,
-                'categories':node_cat
-            }        
+                self.query['message']['query_graph']['nodes'][self.node_set[node]] = {
+                    'categories':node_cat
+                }
+            else:
+                self.query['message']['query_graph']['nodes'][self.node_set[node]] = {
+                    'ids':nid,
+                    'categories':node_cat
+                }
     
     def __set_edge(self,i,subj,obj,predicates) -> None:
         """

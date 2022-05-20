@@ -15,14 +15,14 @@
       },
       "nodes": {
         "n00": {
-          "ids": ["PUBCHEM.COMPOUND:3117"],
+          "ids": ["PUBCHEM.COMPOUND:468595"],
           "categories": ["biolink:ChemicalEntity"]
         },
         "n01": {
           "categories": ["biolink:NamedThing"]
         },
         "n02": {
-          "ids": ["NCBIGene:11343"],
+          "ids": ["NCBIGene:2064"],
           "categories": ["biolink:Gene"]
         }
       }
