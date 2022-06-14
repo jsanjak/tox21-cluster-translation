@@ -96,7 +96,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
 
         if len(json_files) > 0:
             input_args = {'filename': json_files, 'format': 'json'}
-            output_args = {'filename': "data/kgx_files/{0}_{1}.tsv".format(target_candidate['sample_name'],target_candidate['target_gene']), 'format': 'tsv'}
+            output_args = {'filename': "data/kgx_files/{0}_{1}".format(target_candidate['sample_name'],target_candidate['target_gene']), 'format': 'tsv'}
             t = Transformer()
             t.transform(input_args=input_args, output_args=output_args)
             for fname in json_files:
@@ -130,6 +130,7 @@ def main():
     genename2ncbicurie = {i[0]:i[1] for i in translator_gene_names}
 
     all_candidate_compounds = set([i['sample_name'] for i in candidate_data])
+
     translator_compound_names = translator_util.translate_node_name(all_candidate_compounds,'PUBCHEM.COMPOUND')
 
     with open('data/compound_names.pkl', 'wb') as handle:
@@ -144,6 +145,7 @@ def main():
     biolink_classes = ["biolink:" + i.title().replace(" ","") for i in tk.get_descendants('named thing')]
 
     query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in candidate_data)
+
 
 if __name__=="__main__":
     main()
