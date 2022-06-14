@@ -96,7 +96,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
 
         if len(json_files) > 0:
             input_args = {'filename': json_files, 'format': 'json'}
-            output_args = {'filename': "data/kgx_files/{0}_{1}.tsv".format(target_candidate['sample_name'],target_candidate['target_gene']), 'format': 'tsv'}
+            output_args = {'filename': "data/kgx_files/{0}_{1}".format(target_candidate['sample_name'],target_candidate['target_gene']), 'format': 'tsv'}
             t = Transformer()
             t.transform(input_args=input_args, output_args=output_args)
             for fname in json_files:
@@ -109,7 +109,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
 
 def main():
 
-    key_clusters = [2] #,1,94,105]
+    key_clusters = [2,1,94,105]
 
     candidate_data = []
     with open("data/tox21_cluster_compound_target_candidates.csv") as csvfile:
@@ -126,10 +126,10 @@ def main():
     genename2ncbicurie = {i[0]:i[1] for i in translator_gene_names}
 
     all_candidate_compounds = set([i['sample_name'] for i in candidate_data])
-    #translator_compound_names = translator_util.translate_node_name(all_candidate_compounds,'PUBCHEM.COMPOUND')
+        #translator_compound_names = translator_util.translate_node_name(all_candidate_compounds,'PUBCHEM.COMPOUND')
 
-    #with open('data/compound_names.pkl', 'wb') as handle:
-    #    pickle.dump(translator_compound_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
+        #with open('data/compound_names.pkl', 'wb') as handle:
+        #    pickle.dump(translator_compound_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
 
     with open('data/compound_names.pkl', 'rb') as handle:
         translator_compound_names = pickle.load(handle)
@@ -139,7 +139,7 @@ def main():
     tk = Toolkit()
     biolink_classes = ["biolink:" + i.title().replace(" ","") for i in tk.get_descendants('named thing')]
 
-    query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in [x for x in candidate_data if (x['target_gene']=='EGFR') & (x['sample_name']=='Aripiprazole')])
+    query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in [x for x in candidate_data if (x['target_gene'] == 'EGFR') & (x['sample_name'] == 'Diniconazole')])
 
     print(query_succcess) 
 
