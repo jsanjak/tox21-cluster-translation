@@ -109,7 +109,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
 
 def main():
 
-    key_clusters = [2] #,1,94,105]
+    key_clusters = [2,1,94,105]
 
     candidate_data = []
     with open("data/tox21_cluster_compound_target_candidates.csv") as csvfile:
@@ -119,29 +119,31 @@ def main():
                 candidate_data.append(row)
 
     all_candidate_genes = set([i['target_gene'] for i in candidate_data])
-    #translator_gene_names = translator_util.translate_node_name(all_candidate_genes,'NCBIGene',cutoff=True)
-    with open('data/gene_names.pkl', 'rb') as handle:
-        translator_gene_names = pickle.load(handle)
+    translator_gene_names = translator_util.translate_node_name(all_candidate_genes,'NCBIGene')
+    
+    with open('data/gene_names.pkl','wb') as handle:
+        pickle.dump(translator_gene_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
+
+    #with open('data/gene_names.pkl', 'rb') as handle:
+    #    translator_gene_names = pickle.load(handle)
 
     genename2ncbicurie = {i[0]:i[1] for i in translator_gene_names}
 
     all_candidate_compounds = set([i['sample_name'] for i in candidate_data])
-    #translator_compound_names = translator_util.translate_node_name(all_candidate_compounds,'PUBCHEM.COMPOUND')
+    translator_compound_names = translator_util.translate_node_name(all_candidate_compounds,'PUBCHEM.COMPOUND')
 
-    #with open('data/compound_names.pkl', 'wb') as handle:
-    #    pickle.dump(translator_compound_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
+    with open('data/compound_names.pkl', 'wb') as handle:
+        pickle.dump(translator_compound_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
 
-    with open('data/compound_names.pkl', 'rb') as handle:
-        translator_compound_names = pickle.load(handle)
+    #with open('data/compound_names.pkl', 'rb') as handle:
+    #    translator_compound_names = pickle.load(handle)
 
     samplename2pubchemcurie = {i[0]:i[1] for i in translator_compound_names}
 
     tk = Toolkit()
     biolink_classes = ["biolink:" + i.title().replace(" ","") for i in tk.get_descendants('named thing')]
 
-    query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in [x for x in candidate_data if (x['target_gene']=='EGFR') & (x['sample_name']=='Aripiprazole')])
-
-    print(query_succcess) 
+    query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in candidate_data)
 
 if __name__=="__main__":
     main()
