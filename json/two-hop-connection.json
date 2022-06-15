@@ -1,0 +1,40 @@
+{
+    "message": {
+      "query_graph": {
+        "edges": {
+          "e00": {
+            "subject": "n00",
+              "object": "n01",
+          "predicates":["biolink:related_to"]
+          },
+          "e01": {
+            "subject": "n01",
+              "object": "n02",
+          "predicates":["biolink:related_to"]
+          },
+          "e02": {
+            "subject": "n02",
+              "object": "n03",
+          "predicates":["biolink:related_to"]
+          }
+        },
+        "nodes": {
+          "n00": {
+            "ids": ["PUBCHEM.COMPOUND:468595"],
+            "categories": ["biolink:ChemicalEntity"]
+          },
+          "n01": {
+            "categories": ["biolink:NamedThing"]
+          },
+          "n02": {
+            "categories": ["biolink:NamedThing"]
+          },
+          "n03": {
+            "ids": ["NCBIGene:2064"],
+            "categories": ["biolink:Gene"]
+          }
+        }
+      }
+    }
+  }
+  

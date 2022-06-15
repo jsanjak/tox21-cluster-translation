@@ -52,6 +52,8 @@ def edge2kgx(eid,edge):
     else:
         kgx_edge['relation'] = None
     
+    kgx_edge['attributes'] = attr
+
     return kgx_edge
 
 
@@ -63,6 +65,7 @@ def trapi2kgx(kg,biolink_classes):
     
     return kgx
 
+
 def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes):
     
     try:
@@ -72,14 +75,22 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
             cid = target_candidate['pubchem_cid']
             compound = f'PUBCHEM.COMPOUND:{cid}'    
         gene = genename2ncbicurie[target_candidate['target_gene']]
-        direct_edge_list = [[compound,gene,'biolink:related_to']]
-        indirect_edge_list = [[compound,'biolink:NamedThing','biolink:related_to'],['biolink:NamedThing',gene,'biolink:related_to']]
+        direct_edge_list = [[(0,compound),(1,gene),'biolink:related_to']]
+        indirect_edge_list = [[(0,compound),(1,'biolink:NamedThing'),'biolink:related_to'],[(1,'biolink:NamedThing'),(2,gene),'biolink:related_to']]
+        #twohop_edge_list = [[(0,compound),(1,'biolink:NamedThing'),'biolink:related_to'],
+        #[(1,'biolink:NamedThing'),(2,'biolink:NamedThing'),'biolink:related_to'],
+        #[(2,'biolink:NamedThing'),(3,gene),'biolink:related_to']]
+        
         node_categories = {compound:['biolink:ChemicalEntity'],gene:['biolink:Gene']}
-        #candidate_direct_trapi = TrapiGraph(direct_edge_list,format='SOP',node_data=node_categories)
+        
+        candidate_direct_trapi = TrapiGraph(direct_edge_list,format='SOP',node_data=node_categories)
         candidate_indirect_trapi = TrapiGraph(indirect_edge_list,format='SOP',node_data=node_categories)
+        #candidate_twohop_trapi = TrapiGraph(twohop_edge_list,format='SOP',node_data=node_categories)
 
+
+        print(candidate_direct_trapi.query)
         myquery = TranslatorQuery()
-        myquery.query(candidate_indirect_trapi,delay=30)
+        myquery.query(candidate_direct_trapi,delay=30)
 
         json_files = []
         for result in myquery.results:
@@ -87,6 +98,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
 
             if message is not None:
                 kg = translator_util.getpath(myquery.results[result],["message","knowledge_graph"])
+
                 kgx = trapi2kgx(kg,biolink_classes)
                 
                 json_fname = "data/kgx_files/{0}_{1}_{2}.json".format(target_candidate['sample_name'],target_candidate['target_gene'],result)
@@ -99,8 +111,8 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
             output_args = {'filename': "data/kgx_files/{0}_{1}".format(target_candidate['sample_name'],target_candidate['target_gene']), 'format': 'tsv'}
             t = Transformer()
             t.transform(input_args=input_args, output_args=output_args)
-            for fname in json_files:
-                os.remove(fname)
+            #for fname in json_files:
+            #    os.remove(fname)
 
         return 0
     except Exception as e:
@@ -109,7 +121,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
 
 def main():
 
-    key_clusters = [2,1,94,105]
+    key_clusters = [2]#,1,94,105]
 
     candidate_data = []
     with open("data/tox21_cluster_compound_target_candidates.csv") as csvfile:
@@ -119,32 +131,32 @@ def main():
                 candidate_data.append(row)
 
     all_candidate_genes = set([i['target_gene'] for i in candidate_data])
-    translator_gene_names = translator_util.translate_node_name(all_candidate_genes,'NCBIGene')
+    #translator_gene_names = translator_util.translate_node_name(all_candidate_genes,'NCBIGene')
     
-    with open('data/gene_names.pkl','wb') as handle:
-        pickle.dump(translator_gene_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
+    #with open('data/gene_names.pkl','wb') as handle:
+    #    pickle.dump(translator_gene_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
 
-    #with open('data/gene_names.pkl', 'rb') as handle:
-    #    translator_gene_names = pickle.load(handle)
+    with open('data/gene_names.pkl', 'rb') as handle:
+        translator_gene_names = pickle.load(handle)
 
     genename2ncbicurie = {i[0]:i[1] for i in translator_gene_names}
 
     all_candidate_compounds = set([i['sample_name'] for i in candidate_data])
 
-    translator_compound_names = translator_util.translate_node_name(all_candidate_compounds,'PUBCHEM.COMPOUND')
+    #translator_compound_names = translator_util.translate_node_name(all_candidate_compounds,'PUBCHEM.COMPOUND')
 
-    with open('data/compound_names.pkl', 'wb') as handle:
-        pickle.dump(translator_compound_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
+    #with open('data/compound_names.pkl', 'wb') as handle:
+    #   pickle.dump(translator_compound_names,handle,protocol=pickle.HIGHEST_PROTOCOL)
 
-    #with open('data/compound_names.pkl', 'rb') as handle:
-    #    translator_compound_names = pickle.load(handle)
+    with open('data/compound_names.pkl', 'rb') as handle:
+        translator_compound_names = pickle.load(handle)
 
     samplename2pubchemcurie = {i[0]:i[1] for i in translator_compound_names}
 
     tk = Toolkit()
     biolink_classes = ["biolink:" + i.title().replace(" ","") for i in tk.get_descendants('named thing')]
 
-    query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in candidate_data)
+    query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in [x for x in candidate_data if (x['sample_name'] == 'Posaconazole') & (x['target_gene'] == 'ERBB2')])
 
 
 if __name__=="__main__":
