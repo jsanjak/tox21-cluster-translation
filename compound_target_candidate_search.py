@@ -65,9 +65,27 @@ def trapi2kgx(kg,biolink_classes):
     
     return kgx
 
+def write_results(query,prefix,target_candidate,biolink_classes):
+    json_files = []
+    for result in query.results:
+        message =  query.results[result]['message'].get('results')
+
+        if message is not None:
+            kg = translator_util.getpath(query.results[result],["message","knowledge_graph"])
+
+            kgx = trapi2kgx(kg,biolink_classes)
+            
+            json_fname = "data/kgx_files/{0}_{1}_{2}_{3}.json".format(target_candidate['sample_name'],target_candidate['target_gene'],prefix,result)
+            json_files.append(json_fname)
+            with open(json_fname,encoding='utf-8',mode='w') as kgx_file:
+                json.dump(kgx,kgx_file,ensure_ascii=False, indent=2)
+    
+    return json_files
+
+
 
 def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes):
-    
+    print(target_candidate)
     try:
         if target_candidate['sample_name'] in samplename2pubchemcurie:
             compound=samplename2pubchemcurie[target_candidate['sample_name']]
@@ -75,7 +93,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
             cid = target_candidate['pubchem_cid']
             compound = f'PUBCHEM.COMPOUND:{cid}'    
         gene = genename2ncbicurie[target_candidate['target_gene']]
-        direct_edge_list = [[(0,compound),(1,gene),'biolink:related_to']]
+        #direct_edge_list = [[(0,compound),(1,gene),'biolink:related_to']]
         indirect_edge_list = [[(0,compound),(1,'biolink:NamedThing'),'biolink:related_to'],[(1,'biolink:NamedThing'),(2,gene),'biolink:related_to']]
         #twohop_edge_list = [[(0,compound),(1,'biolink:NamedThing'),'biolink:related_to'],
         #[(1,'biolink:NamedThing'),(2,'biolink:NamedThing'),'biolink:related_to'],
@@ -83,28 +101,20 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
         
         node_categories = {compound:['biolink:ChemicalEntity'],gene:['biolink:Gene']}
         
-        candidate_direct_trapi = TrapiGraph(direct_edge_list,format='SOP',node_data=node_categories)
+        #candidate_direct_trapi = TrapiGraph(direct_edge_list,format='SOP',node_data=node_categories)
         candidate_indirect_trapi = TrapiGraph(indirect_edge_list,format='SOP',node_data=node_categories)
         #candidate_twohop_trapi = TrapiGraph(twohop_edge_list,format='SOP',node_data=node_categories)
 
+        indir_query = TranslatorQuery()
+        indir_query.query(candidate_indirect_trapi,delay=30)
 
-        print(candidate_direct_trapi.query)
-        myquery = TranslatorQuery()
-        myquery.query(candidate_direct_trapi,delay=30)
+        #dir_query = TranslatorQuery()
+        #dir_query.query(candidate_direct_trapi,delay=30)
 
-        json_files = []
-        for result in myquery.results:
-            message =  myquery.results[result]['message'].get('results')
+        indir_json = write_results(indir_query,'indirect',target_candidate,biolink_classes)
+        #dir_json = write_results(dir_query,'direct',target_candidate,biolink_classes)
 
-            if message is not None:
-                kg = translator_util.getpath(myquery.results[result],["message","knowledge_graph"])
-
-                kgx = trapi2kgx(kg,biolink_classes)
-                
-                json_fname = "data/kgx_files/{0}_{1}_{2}.json".format(target_candidate['sample_name'],target_candidate['target_gene'],result)
-                json_files.append(json_fname)
-                with open(json_fname,encoding='utf-8',mode='w') as kgx_file:
-                    json.dump(kgx,kgx_file,ensure_ascii=False, indent=2)
+        json_files = indir_json #+ dir_json
 
         if len(json_files) > 0:
             input_args = {'filename': json_files, 'format': 'json'}
@@ -121,7 +131,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
 
 def main():
 
-    key_clusters = [2]#,1,94,105]
+    key_clusters = [2,1,94,105]
 
     candidate_data = []
     with open("data/tox21_cluster_compound_target_candidates.csv") as csvfile:
@@ -156,8 +166,7 @@ def main():
     tk = Toolkit()
     biolink_classes = ["biolink:" + i.title().replace(" ","") for i in tk.get_descendants('named thing')]
 
-    query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in [x for x in candidate_data if (x['sample_name'] == 'Posaconazole') & (x['target_gene'] == 'ERBB2')])
-
-
+    query_succcess = Parallel(n_jobs=-1)(delayed(myquery)(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_classes) for target_candidate in candidate_data)
+ 
 if __name__=="__main__":
     main()

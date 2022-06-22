@@ -10,6 +10,7 @@ import urllib.parse
 import time
 from csv import reader
 import os
+import time
 
 class TranslatorQuery():
     """
@@ -21,6 +22,9 @@ class TranslatorQuery():
         self.results = None
         self.arax_base='https://arax.ncats.io'
         self.ars_url='https://ars.transltr.io/ars/api'
+        self.starttime = None
+        self.runtime = None
+        self.timeout = 20*60
 
     def __submit_to_ars(self,m,ars_url='https://ars.transltr.io/ars/api'):
         """
@@ -29,13 +33,14 @@ class TranslatorQuery():
         """
 
         submit_url=f'{ars_url}/submit'
+        self.starttime = time.time()
         response = requests.post(submit_url,json=m)
         try:
             message_id = response.json()['pk']
         except:
             print('ARS failed to respond')
             message_id = None
-
+            #
         self.arax_url = f'{self.arax_base}/?source=ARS&id={message_id}'
         return message_id
 
@@ -88,10 +93,24 @@ class TranslatorQuery():
         """
         self.query_graph = query_graph
         self.message_id=self.__submit_to_ars(self.query_graph.query)
+        print(self.message_id)
+        timeout_count = 0
 
         time.sleep(delay)#Time to figure itself out
         while self.__check_status(self.message_id) == 'Running':
-            print("Still Running")
+            current_time = time.time()
+            self.runtime = current_time - self.starttime
+            if self.runtime > self.timeout:
+                
+                #if timeout_count < 1:
+                #    print("Re-submitting")
+                #    self.message_id=self.__submit_to_ars(self.query_graph.query)
+                #    timeout_count += 1
+                #else:
+                print("Giving up")
+                break
+            #else:
+            #    print("Still Running")
             time.sleep(delay) #Time to finish
         time.sleep(delay*2) #Time to actually get the data in 
         self.results=self.__retrieve_ars_results(self.message_id)
