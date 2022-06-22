@@ -110,7 +110,6 @@ dependencies:
     - pyshexc==0.9.1
     - pytest==7.1.2
     - python-dateutil==2.8.2
-    - python-graphviz==0.20
     - pytz==2022.1
     - pyyaml==5.4.1
     - rdflib==6.1.1
@@ -142,7 +141,6 @@ dependencies:
     - tomli==1.2.3
     - tox==3.25.0
     - tox-docker==3.1.0
-    - translatorpy==0.0.1
     - typing-extensions==4.2.0
     - urllib3==1.26.9
     - validators==0.19.0

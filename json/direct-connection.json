@@ -10,12 +10,12 @@
       },
       "nodes": {
         "n00": {
-          "ids": ["PUBCHEM.COMPOUND:3117"],
-          "categories": ["biolink:ChemicalEntity"]
+          "ids": ["PUBCHEM.COMPOUND:468595"],
+          "categories": ["biolink:NamedThing"]
         },
         "n01": {
-          "ids": ["NCBIGene:11343"],
-          "categories": ["biolink:Gene"]
+          "ids": ["NCBIGene:2064"],
+          "categories": ["biolink:NamedThing"]
         }
       }
     }

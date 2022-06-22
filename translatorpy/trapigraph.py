@@ -28,13 +28,13 @@ class TrapiGraph():
         for node in self.node_set:
             
             node_cat = ['biolink:NamedThing']
-            nid = [node]
+            nid = [node[1]]
             if node_data is not None:
-                if node in node_data:
-                    node_cat = node_data[node]
+                if node[1] in node_data:
+                    node_cat = node_data[node[1]]
             
-            if 'biolink' in node:
-                node_cat = [node]
+            if 'biolink' in node[1]:
+                node_cat = [node[1]]
 
                 self.query['message']['query_graph']['nodes'][self.node_set[node]] = {
                     'categories':node_cat
