@@ -94,23 +94,23 @@ class TranslatorQuery():
         self.query_graph = query_graph
         self.message_id=self.__submit_to_ars(self.query_graph.query)
         print(self.message_id)
-        timeout_count = 0
+        #timeout_count = 0
 
         time.sleep(delay)#Time to figure itself out
         while self.__check_status(self.message_id) == 'Running':
-            current_time = time.time()
-            self.runtime = current_time - self.starttime
-            if self.runtime > self.timeout:
+            #current_time = time.time()
+            #self.runtime = current_time - self.starttime
+            #if self.runtime > self.timeout:
                 
                 #if timeout_count < 1:
                 #    print("Re-submitting")
                 #    self.message_id=self.__submit_to_ars(self.query_graph.query)
                 #    timeout_count += 1
                 #else:
-                print("Giving up")
-                break
+            #    print("Giving up")
+            #    break
             #else:
-            #    print("Still Running")
+            print("Still Running")
             time.sleep(delay) #Time to finish
         time.sleep(delay*2) #Time to actually get the data in 
         self.results=self.__retrieve_ars_results(self.message_id)
