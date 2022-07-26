@@ -93,7 +93,7 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
             cid = target_candidate['pubchem_cid']
             compound = f'PUBCHEM.COMPOUND:{cid}'    
         gene = genename2ncbicurie[target_candidate['target_gene']]
-        #direct_edge_list = [[(0,compound),(1,gene),'biolink:related_to']]
+        direct_edge_list = [[(0,compound),(1,gene),'biolink:related_to']]
         indirect_edge_list = [[(0,compound),(1,'biolink:NamedThing'),'biolink:related_to'],[(1,'biolink:NamedThing'),(2,gene),'biolink:related_to']]
         #twohop_edge_list = [[(0,compound),(1,'biolink:NamedThing'),'biolink:related_to'],
         #[(1,'biolink:NamedThing'),(2,'biolink:NamedThing'),'biolink:related_to'],
@@ -101,20 +101,20 @@ def myquery(target_candidate,samplename2pubchemcurie,genename2ncbicurie,biolink_
         
         node_categories = {compound:['biolink:ChemicalEntity'],gene:['biolink:Gene']}
         
-        #candidate_direct_trapi = TrapiGraph(direct_edge_list,format='SOP',node_data=node_categories)
+        candidate_direct_trapi = TrapiGraph(direct_edge_list,format='SOP',node_data=node_categories)
         candidate_indirect_trapi = TrapiGraph(indirect_edge_list,format='SOP',node_data=node_categories)
         #candidate_twohop_trapi = TrapiGraph(twohop_edge_list,format='SOP',node_data=node_categories)
 
         indir_query = TranslatorQuery()
         indir_query.query(candidate_indirect_trapi,delay=30)
 
-        #dir_query = TranslatorQuery()
-        #dir_query.query(candidate_direct_trapi,delay=30)
+        dir_query = TranslatorQuery()
+        dir_query.query(candidate_direct_trapi,delay=30)
 
         indir_json = write_results(indir_query,'indirect',target_candidate,biolink_classes)
-        #dir_json = write_results(dir_query,'direct',target_candidate,biolink_classes)
+        dir_json = write_results(dir_query,'direct',target_candidate,biolink_classes)
 
-        json_files = indir_json #+ dir_json
+        json_files = indir_json + dir_json
 
         if len(json_files) > 0:
             input_args = {'filename': json_files, 'format': 'json'}

@@ -20,7 +20,7 @@ def clean_up_files(ofname,single_files,fields):
 def main():
 
     core_node_fields=["id","category","name","provided_by","knowledge_source"]
-    core_edge_fields=["id","subject","predicate","object","knowledge_source"]
+    core_edge_fields=["id","subject","predicate","object","attributes","knowledge_source"]
 
     single_node_files = glob.glob("data/kgx_files/*_nodes.tsv")
     single_edges_files = glob.glob("data/kgx_files/*_edges.tsv")
